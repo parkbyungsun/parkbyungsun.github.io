@@ -1,29 +1,92 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
-    <link rel="stylesheet" href="./stylesheets/test.css">
-    <title>화면정의 서비스 프로토타입</title>
-  </head>
-  <body>
+        <link rel="stylesheet" href="./css/test.css">
+        <title>화면정의 서비스 프로토타입</title>
+    </head>
+    <body>
 
-    <h3>화면정의 서비스 프로토타입</h3>
+    
 
-    <!--
-    <img id="preview" src="" width="700" alt="로컬에 있는 이미지가 보여지는 영역">
-    <a id="download" download="thumbnail.jpg" target="_blank">
-        <img id="thumbnail" src="" width="100" alt="썸네일영역 (클릭하면 다운로드 가능)">
-    </a>
-    <input type="file" id="getfile" accept="image/*">
+<!--     <label><a style="text-decoration: none;" href="#"><span class="mdi mdi-lightbulb-on-outline">Brand</span></a></label>
+    <br>
+    <br> -->
+    <label title="Add an image" class="myFile"><span class="mdi mdi-image"> Add Photo</span>&nbsp;
+       <input type="file" id="file" />
+    </label>
+    <label title="Add a background" class="myFile2"><span class="mdi mdi-image"> Add Background</span>&nbsp;
+       <input type="file" id="file2" />
+    </label>
+    <!-- <a onclick="Addtext()" title="Add text"><span class="mdi mdi-format-text"> Add Text</span></a>&emsp; -->
+    <br>
+    <!-- <a onclick="sendSelectedObjectToFront()" title="Bring selected to front"><span class="mdi mdi-arrange-bring-forward"> Front</span></a> -->
+    <!-- <a onclick="sendSelectedObjectBack()" title="Send selected to back"><span class="mdi mdi-arrange-send-backward"> Back</span></a> -->
+    <a onClick="deleteObject()" title="Delete Anything Selected"><span class="mdi mdi-delete"> Delete</span></a>&emsp;
+    <a onclick="refresh()" title="Start fresh"><span class="mdi mdi-shredder"> Clear All</span></a>&emsp;
+    <a id="lnkDownload" title="Save"><span class="mdi mdi-download"> Save</span></a>
 
-    <canvas id="c"></canvas>
--->
+
+    <a onclick="drawAble()" title="그리기 가능">사각그리기</a>
+
+    <div id="textControls" hidden>
+       <div id="text-wrapper" data-ng-show="getText()">
+          <div id="text-controls">
+             <select id="font-family">
+                <option value="arial">Arial</option>
+                <option value="HelveticaNeue" selected>Helvetica Neue</option>
+                <option value="myriad pro">Myriad Pro</option>
+                <option value="delicious">Delicious</option>
+                <option value="verdana">Verdana</option>
+                <option value="georgia">Georgia</option>
+                <option value="courier">Courier</option>
+                <option value="comic sans ms">Comic Sans MS</option>
+                <option value="impact">Impact</option>
+                <option value="monaco">Monaco</option>
+                <option value="optima">Optima</option>
+                <option value="hoefler text">Hoefler Text</option>
+                <option value="plaster">Plaster</option>
+                <option value="engagement">Engagement</option>
+             </select>
+             <input type="color" id="text-color" size="10">
+             <select id="text-align">
+                <option value="left">Align Left</option>
+                <option value="center">Align Center</option>
+                <option value="right">Align Right</option>
+                <option value="justify">Align Justify</option>
+             </select>
+             <label for="text-stroke-color">Stroke C:</label>
+             <input type="color" id="text-stroke-color">
+             <label for="text-stroke-width">Stroke W:</label>
+             <input type="number" value="1" min="1" max="5" id="text-stroke-width">
+             <label for="text-font-size">Font S:</label>
+             <input type="number" min="12" max="120" step="1" id="text-font-size">
+             <label for="text-line-height">Line H:</label>
+             <input type="number" min="0" max="10" step="0.1" id="text-line-height">
+             <label for="text-bg-color">BG Color:</label>
+             <input type="color" id="text-bg-color" size="10">
+             <label for="text-lines-bg-color">BG Text Color:</label>
+             <input type="color" id="text-lines-bg-color" size="10">
+             <input type='checkbox' name='fonttype' id="text-cmd-bold"> <b>B</b>
+             <input type='checkbox' name='fonttype' id="text-cmd-italic"> <em>I</em>
+             <input type='checkbox' name='fonttype' id="text-cmd-underline"> Underline
+             <input type='checkbox' name='fonttype' id="text-cmd-linethrough"> Linethrough
+             <input type='checkbox' name='fonttype' id="text-cmd-overline"> Overline
+          </div>
+       </div>
+    </div>
+    <canvas id="c" width="700" height="1500"></canvas>
+
+
+
+
+
 
 
 
@@ -33,92 +96,266 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.7.22/fabric.min.js" crossorigin="anonymous"></script>
+    <!-- <script src="./js/test.js" ></script> -->
     <script>
     
-        var file = document.querySelector('#getfile');
+        var canvas = new fabric.Canvas('c', { selection: false });
 
-        file.onchange = function () {
-            var fileList = file.files ;
-            
-            // 읽기
+        // var canvas = new fabric.Canvas('c');
+
+        canvas.on('object:selected', function(e) {
+            if (e.target.type === 'i-text') {
+                document.getElementById('textControls').hidden = false;
+            }
+        });
+        canvas.on('before:selection:cleared', function(e) {
+            if (e.target.type === 'i-text') {
+                document.getElementById('textControls').hidden = true;
+            }
+        });
+        document.getElementById('file').addEventListener("change", function(e) {
+            var file = e.target.files[0];
             var reader = new FileReader();
-            reader.readAsDataURL(fileList [0]);
-
-            //로드 한 후
-            reader.onload = function  () {
-                //로컬 이미지를 보여주기
-                document.querySelector('#preview').src = reader.result;
-                
-                //썸네일 이미지 생성
-                var tempImage = new Image(); //drawImage 메서드에 넣기 위해 이미지 객체화
-                tempImage.src = reader.result; //data-uri를 이미지 객체에 주입
-                tempImage.onload = function() {
-                    //리사이즈를 위해 캔버스 객체 생성
-                    var canvas = document.createElement('canvas');
-                    var canvasContext = canvas.getContext("2d");
-                    
-                    //캔버스 크기 설정
-                    canvas.width = 100; //가로 100px
-                    canvas.height = 100; //세로 100px
-                    
-                    //이미지를 캔버스에 그리기
-                    canvasContext.drawImage(this, 0, 0, 100, 100);
-                    //캔버스에 그린 이미지를 다시 data-uri 형태로 변환
-                    var dataURI = canvas.toDataURL("image/jpeg");
-                    
-                    //썸네일 이미지 보여주기
-                    document.querySelector('#thumbnail').src = dataURI;
-                    
-                    //썸네일 이미지를 다운로드할 수 있도록 링크 설정
-                    document.querySelector('#download').href = dataURI;
-                };
-            }; 
-        }; 
-    
-
-        (function() {
-        var canvas = this.__canvas = new fabric.Canvas('c');
-        fabric.Object.prototype.transparentCorners = false;
-
-        var rect1 = new fabric.Rect({
-            width: 200, height: 100, left: 0, top: 50, angle: 30,
-            fill: 'rgba(255,0,0,0.5)'
+            reader.onload = function(f) {
+                var data = f.target.result;
+                fabric.Image.fromURL(data, function(img) {
+                    var oImg = img.set({
+                        left: 0,
+                        top: 0,
+                        angle: 0,
+                        border: '#000',
+                        stroke: '#F0F0F0', //<-- set this
+                        strokeWidth: 40 //<-- set this
+                    }).scale(0.2);
+                    canvas.add(oImg).renderAll();
+                    //var a = canvas.setActiveObject(oImg);
+                    var dataURL = canvas.toDataURL({
+                        format: 'png',
+                        quality: 1
+                    });
+                });
+            };
+            reader.readAsDataURL(file);
         });
 
-        var rect2 = new fabric.Rect({
-            width: 100, height: 100, left: 350, top: 250, angle: -10,
-            fill: 'rgba(0,200,0,0.5)'
+
+        document.getElementById('file2').addEventListener("change", function(e) {
+            var file = e.target.files[0];
+            var reader = new FileReader();
+            reader.onload = function(f) {
+                var data = f.target.result;
+                fabric.Image.fromURL(data, function(img) {
+                    // add background image
+                    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+                        scaleX: canvas.width / img.width,
+                        scaleY: canvas.height / img.height
+                    });
+                });
+            };
+            reader.readAsDataURL(file);
         });
 
-        var rect3 = new fabric.Rect({
-            width: 50, height: 100, left: 275, top: 350, angle: 45,
-            stroke: '#eee', strokeWidth: 10,
-            fill: 'rgba(0,0,200,0.5)'
-        });
-
-        var circle = new fabric.Circle({
-            radius: 50, left: 275, top: 75, fill: '#aac'
-        });
-
-        var triangle = new fabric.Triangle({
-            width: 100, height: 100, left: 50, top: 300, fill: '#cca'
-        });
-
-        canvas.add(rect1, rect2, rect3, circle, triangle);
-        canvas.on({
-            'object:moving': onChange,
-            'object:scaling': onChange,
-            'object:rotating': onChange,
-        });
-
-        function onChange(options) {
-            options.target.setCoords();
-            canvas.forEachObject(function(obj) {
-            if (obj === options.target) return;
-            obj.set('opacity' ,options.target.intersectsWithObject(obj) ? 0.5 : 1);
-            });
+        // Delete selected object
+        window.deleteObject = function() {
+            var activeGroup = canvas.getActiveGroup();
+            if (activeGroup) {
+                var activeObjects = activeGroup.getObjects();
+                for (let i in activeObjects) {
+                    canvas.remove(activeObjects[i]);
+                }
+                canvas.discardActiveGroup();
+                canvas.renderAll();
+            } else canvas.getActiveObject().remove();
         }
-        })();
+        // Refresh page
+        function refresh() {
+            setTimeout(function() {
+                location.reload()
+            }, 100);
+        }
+        // Add text
+        function Addtext() {
+            canvas.add(new fabric.IText('Tap and Type', {
+                left: 50,
+                top: 100,
+                fontFamily: 'helvetica neue',
+                fill: '#000',
+                stroke: '#fff',
+                strokeWidth: .1,
+                fontSize: 45
+            }));
+        }
+        // Edit Text
+        document.getElementById('text-color').onchange = function() {
+            canvas.getActiveObject().setFill(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-color').onchange = function() {
+            canvas.getActiveObject().setFill(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-bg-color').onchange = function() {
+            canvas.getActiveObject().setBackgroundColor(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-lines-bg-color').onchange = function() {
+            canvas.getActiveObject().setTextBackgroundColor(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-stroke-color').onchange = function() {
+            canvas.getActiveObject().setStroke(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-stroke-width').onchange = function() {
+            canvas.getActiveObject().setStrokeWidth(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('font-family').onchange = function() {
+            canvas.getActiveObject().setFontFamily(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-font-size').onchange = function() {
+            canvas.getActiveObject().setFontSize(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-line-height').onchange = function() {
+            canvas.getActiveObject().setLineHeight(this.value);
+            canvas.renderAll();
+        };
+        document.getElementById('text-align').onchange = function() {
+            canvas.getActiveObject().setTextAlign(this.value);
+            canvas.renderAll();
+        };
+        radios5 = document.getElementsByName("fonttype"); // wijzig
+        for (var i = 0, max = radios5.length; i < max; i++) {
+            radios5[i].onclick = function() {
+                if (document.getElementById(this.id).checked == true) {
+                    if (this.id == "text-cmd-bold") {
+                        canvas.getActiveObject().set("fontWeight", "bold");
+                    }
+                    if (this.id == "text-cmd-italic") {
+                        canvas.getActiveObject().set("fontStyle", "italic");
+                    }
+                    if (this.id == "text-cmd-underline") {
+                        canvas.getActiveObject().set("textDecoration", "underline");
+                    }
+                    if (this.id == "text-cmd-linethrough") {
+                        canvas.getActiveObject().set("textDecoration", "line-through");
+                    }
+                    if (this.id == "text-cmd-overline") {
+                        canvas.getActiveObject().set("textDecoration", "overline");
+                    }
+                } else {
+                    if (this.id == "text-cmd-bold") {
+                        canvas.getActiveObject().set("fontWeight", "");
+                    }
+                    if (this.id == "text-cmd-italic") {
+                        canvas.getActiveObject().set("fontStyle", "");
+                    }
+                    if (this.id == "text-cmd-underline") {
+                        canvas.getActiveObject().set("textDecoration", "");
+                    }
+                    if (this.id == "text-cmd-linethrough") {
+                        canvas.getActiveObject().set("textDecoration", "");
+                    }
+                    if (this.id == "text-cmd-overline") {
+                        canvas.getActiveObject().set("textDecoration", "");
+                    }
+                }
+                canvas.renderAll();
+            }
+        }
+        // Send selected object to front or back
+        var selectedObject;
+        canvas.on('object:selected', function(event) {
+            selectedObject = event.target;
+        });
+        var sendSelectedObjectBack = function() {
+            canvas.sendToBack(selectedObject);
+        }
+        var sendSelectedObjectToFront = function() {
+            canvas.bringToFront(selectedObject);
+        }
+        // Download
+        var imageSaver = document.getElementById('lnkDownload');
+        imageSaver.addEventListener('click', saveImage, false);
+
+        function saveImage(e) {
+            this.href = canvas.toDataURL({
+                format: 'png',
+                quality: 0.8
+            });
+            this.download = 'custom.png'
+        }
+        // Do some initializing stuff
+        fabric.Object.prototype.set({
+            transparentCorners: true,
+            cornerColor: '#22A7F0',
+            borderColor: '#22A7F0',
+            cornerSize: 12,
+            padding: 5
+        });
+
+
+
+
+var rect, isDown, origX, origY;
+
+var isDrawFlag = true;
+canvas.on('mouse:down', function(o){
+    isDown = isDrawFlag;
+    if(isDown) {
+        var pointer = canvas.getPointer(o.e);
+        origX = pointer.x;
+        origY = pointer.y;
+        var pointer = canvas.getPointer(o.e);
+        rect = new fabric.Rect({
+            left: origX,
+            top: origY,
+            originX: 'left',
+            originY: 'top',
+            width: pointer.x-origX,
+            height: pointer.y-origY,
+            angle: 0,
+            fill: 'rgba(180,180,180,0.5)',
+            transparentCorners: true
+        });
+
+        rect.set('selectable', true);
+        canvas.add(rect);
+    }
+});
+
+canvas.on('mouse:move', function(o){
+    if (isDown && isDrawFlag) {
+        var pointer = canvas.getPointer(o.e);
+        
+        if(origX>pointer.x){
+            rect.set({ left: Math.abs(pointer.x) });
+        }
+        if(origY>pointer.y){
+            rect.set({ top: Math.abs(pointer.y) });
+        }
+        
+        rect.set({ width: Math.abs(origX - pointer.x) });
+        rect.set({ height: Math.abs(origY - pointer.y) });
+        
+        
+        canvas.renderAll();
+    }
+});
+
+canvas.on('mouse:up', function(o){
+    isDown = false;
+    isDrawFlag = false;
+});
+
+
+function drawAble(){
+    isDrawFlag = true;
+}
+
+
     </script>
   </body>
 </html>
