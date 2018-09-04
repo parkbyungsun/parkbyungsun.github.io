@@ -103,12 +103,12 @@
 
         // var canvas = new fabric.Canvas('c');
 
-        canvas.on('object:selected', function(e) {
+        canvas.on('object:selected', function(e) {console.log('selected : ', e);
             if (e.target.type === 'i-text') {
                 document.getElementById('textControls').hidden = false;
             }
         });
-        canvas.on('before:selection:cleared', function(e) {
+        canvas.on('before:selection:cleared', function(e) {console.log('cleared : ', e);
             if (e.target.type === 'i-text') {
                 document.getElementById('textControls').hidden = true;
             }
@@ -267,7 +267,7 @@
         }
         // Send selected object to front or back
         var selectedObject;
-        canvas.on('object:selected', function(event) {
+        canvas.on('object:selected', function(event) {console.log('selected.event : ', event);
             selectedObject = event.target;
         });
         var sendSelectedObjectBack = function() {
@@ -280,7 +280,7 @@
         var imageSaver = document.getElementById('lnkDownload');
         imageSaver.addEventListener('click', saveImage, false);
 
-        function saveImage(e) {
+        function saveImage(e) {console.log(e);
             this.href = canvas.toDataURL({
                 format: 'png',
                 quality: 0.8
@@ -296,6 +296,10 @@
             padding: 5
         });
 
+        // 이벤트 추가
+        canvas.on('object:added', function(e){
+            console.log('added : ', e);
+        });
 
 
 
