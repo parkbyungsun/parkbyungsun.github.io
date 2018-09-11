@@ -1,0 +1,74 @@
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
+
+.tab-pane {
+  padding-top: 5px;
+}
+
+
+
+
+
+#img-upload{
+  width: 100%;
+}
+
+#canvas {
+  position: absolute;
+  width: 100%;
+
+}
+
+#svg {
+  /* position: absolute; */
+  width: 100%;
+  height: 500px;
+}
+
+svg {
+  border: solid 1px #aaa;
+}
+rect {
+  fill: lightblue;
+  stroke: blue;
+  stroke-width: 2px;
+  opacity: 0.2;
+  cursor: move;
+}
+
+
+#container svg, #container image , #container canvas{
+  /* width: 100%; */
+}
+
+/* custom */
+#container, #img-upload {
+  /* width: 100%;
+  position: absolute; */
+}
+
+
+
+/* sub image */
+#subImages img {
+  width: 100%;
+  border: 1px solid #aaa;
+}
+
