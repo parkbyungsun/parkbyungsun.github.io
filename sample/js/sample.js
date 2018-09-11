@@ -4,6 +4,8 @@ var _URL = window.URL || window.webkitURL;
 
 var imgFile;
 
+var aList = [];
+
 var svg;
 $(function() {
     $(document).on('change', '.btn-file :file', function() {
@@ -41,6 +43,15 @@ $(function() {
         }
     });
 
+    // D3 init
+    // var width = '100%', height = '100%';
+    svg = d3.select('#svg');
+        // .attr('width', width)
+        // .attr('height', height);
+
+    // svg.append('svg:image').attr('xlink:href', 'http://res.cloudinary.com/dymmtln3y/image/upload/v1536543450/rcf2zihtflxuqrjbbw1o.png');
+    svg.append('svg:image');
+    // svg.append("circle").attr("cx", 30).attr("cy", 30).attr("r", 20);
 
     // firebase 에서 기본 정보 가져온다
     var dispRef = db.ref('/sample/disp');
@@ -63,16 +74,22 @@ $(function() {
         }
     });
 
+    
 
-    // D3 init
-    // var width = '100%', height = '100%';
-    svg = d3.select('#svg');
-        // .attr('width', width)
-        // .attr('height', height);
+    var rectRef = db.ref('/sample/rect');
+    rectRef.on('value', function(jo){
+        console.log(obj);
 
-    svg.append('svg:image').attr('xlink:href', 'http://res.cloudinary.com/dymmtln3y/image/upload/v1536543450/rcf2zihtflxuqrjbbw1o.png');
-    svg.append("circle").attr("cx", 30).attr("cy", 30).attr("r", 20);
-
+        for(var id in jo.val()){
+            var obj = jo.val()[id];
+            svg.append('rect')
+                .attr('id', id)
+                .attr('x', obj.x)
+                .attr('y', obj.y)
+                .attr('width', obj.width)
+                .attr('height', obj.height);
+        }
+    });
 
 
     // canvas
@@ -216,11 +233,28 @@ d3.select('#rectangle').on('click', function(){ new Rectangle(); });
 function Rectangle(){
     var self = this, rect, rectData = [], isDown = false, m1, m2, isDrag = false;
     
+    var date = new Date();
+    var components = [
+        date.getYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+        date.getMilliseconds()
+    ];
+    var id = components.join("");
+
     svg.on('mousedown', function() {
         m1 = d3.mouse(this);
         if (!isDown && !isDrag) {
+
+            
+
+
             self.rectData = [ { x: m1[0], y: m1[1] }, { x: m1[0], y: m1[1] } ];
             self.rectangleElement = d3.select('svg').append('rect')
+                .attr('id', id)
                 .attr('class', 'rectangle')
                 .call(d3.drag()
                     .on("start", dragstarted)
@@ -248,6 +282,22 @@ function Rectangle(){
         } 
     })
     .on('mouseup', function(){
+        if(!isDrag){
+            console.log(this);
+            // var rectEm = d3.select('#' + id);
+            // var rectEm = d3.select('rect#'+id);
+            var pars = {
+                x: self.rectData[1].x - self.rectData[0].x > 0 ? self.rectData[0].x :  self.rectData[1].x,
+                y: self.rectData[1].y - self.rectData[0].y > 0 ? self.rectData[0].y :  self.rectData[1].y,
+                width: Math.abs(self.rectData[1].x - self.rectData[0].x),
+                height: Math.abs(self.rectData[1].y - self.rectData[0].y)
+            };
+
+            var rectRef = db.ref('/sample/rect/' + id);
+            rectRef.set(pars);
+            // console.log(rectEm);
+        }
+
         isDown = false;
         isDrag = true;
     });
@@ -256,6 +306,9 @@ function Rectangle(){
     function clickFunc(){
         console.log('click');
 
+        var rectEm = d3.select(this);
+
+        console.log(rectEm.attr('id'));
 
 
         d3.event.stopPropagation();
@@ -325,6 +378,33 @@ function Rectangle(){
 
 
 }
+
+
+function addAction(obj){
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

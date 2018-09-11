@@ -45,11 +45,16 @@
 svg {
   border: solid 1px #aaa;
 }
+
+svg image {
+  width: 100%;
+}
+
 rect {
   fill: lightblue;
-  stroke: blue;
+  stroke: red;
   stroke-width: 2px;
-  opacity: 0.2;
+  opacity: 0.5;
   cursor: move;
 }
 
