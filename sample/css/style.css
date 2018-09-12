@@ -47,7 +47,12 @@ svg {
 }
 
 svg image {
-  width: 100%;
+  /* width: 100%; */
+}
+
+svg text{
+  font-weight: bold;
+  font-size: 12px;
 }
 
 rect {
@@ -57,6 +62,8 @@ rect {
   opacity: 0.5;
   cursor: move;
 }
+
+
 
 
 #container svg, #container image , #container canvas{

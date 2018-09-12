@@ -7,6 +7,7 @@ var imgFile;
 var aList = [];
 
 var svg;
+var objSize = 0;
 $(function() {
     $(document).on('change', '.btn-file :file', function() {
         var input = $(this),
@@ -76,10 +77,15 @@ $(function() {
 
     
 
+    var actionListEm = $('#subAction');
     var rectRef = db.ref('/sample/rect');
     rectRef.on('value', function(jo){
-        console.log(obj);
+        // svg.html('').append('image');
 
+        svg.selectAll('rect').remove();
+        actionListEm.empty();
+
+        var html = '';
         for(var id in jo.val()){
             var obj = jo.val()[id];
             svg.append('rect')
@@ -87,9 +93,42 @@ $(function() {
                 .attr('x', obj.x)
                 .attr('y', obj.y)
                 .attr('width', obj.width)
-                .attr('height', obj.height);
+                .attr('height', obj.height)
+                .attr('class', 'rectangle')
+                .call(d3.drag()
+                    .on('start', rectEv.dragstarted)
+                    .on('drag', rectEv.dragged)
+                    .on('end', rectEv.dragended))
+                .on('click', rectEv.clickFunc);
+
+
+            // actionListEm.append("<li>" + id + "</li>");
+
+            html += "<li class='list-group-item'>"
+                + id
+                + "<button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
+                + "<span aria-hidden='true'>&times;</span>"
+                + "</button>"
+                + "</li>";
         }
+
+        actionListEm.html(html);
     });
+
+    var objRef = db.ref('/sample/obj');
+    objRef.on('value', function(jo){
+        svg.selectAll('image').remove();
+        svg.selectAll('text').remove();
+        objSize = 0;
+        for(var id in jo.val()){
+            var obj = jo.val()[id];
+            objDraw(obj);
+            objSize++;
+        }
+
+    });
+
+
 
 
     // canvas
@@ -184,9 +223,6 @@ cropFunc.prototype = {
             header: {'X-Requested-With': 'XMLHttpRequest'}
         })
             .then(function(res){
-                console.log('res : ', res);
-
-
                 if(res){
                     var imgData = new imgFunc();
                     imgData.url = res.data.url;
@@ -229,6 +265,13 @@ function test(){
 
 
 
+
+
+
+
+
+
+
 d3.select('#rectangle').on('click', function(){ new Rectangle(); });
 function Rectangle(){
     var self = this, rect, rectData = [], isDown = false, m1, m2, isDrag = false;
@@ -247,20 +290,14 @@ function Rectangle(){
 
     svg.on('mousedown', function() {
         m1 = d3.mouse(this);
+        
+        console.log(m1.x, m1.y);
+
         if (!isDown && !isDrag) {
-
-            
-
-
             self.rectData = [ { x: m1[0], y: m1[1] }, { x: m1[0], y: m1[1] } ];
             self.rectangleElement = d3.select('svg').append('rect')
                 .attr('id', id)
-                .attr('class', 'rectangle')
-                .call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended))
-                .on('click', clickFunc);
+                .attr('class', 'rectangle');
 
             // console.log(self.rectangleElement);
             // self.pointElement1 = d3.select('svg').append('circle').attr('class', 'pointC').call(dragC1);
@@ -283,9 +320,6 @@ function Rectangle(){
     })
     .on('mouseup', function(){
         if(!isDrag){
-            console.log(this);
-            // var rectEm = d3.select('#' + id);
-            // var rectEm = d3.select('rect#'+id);
             var pars = {
                 x: self.rectData[1].x - self.rectData[0].x > 0 ? self.rectData[0].x :  self.rectData[1].x,
                 y: self.rectData[1].y - self.rectData[0].y > 0 ? self.rectData[0].y :  self.rectData[1].y,
@@ -295,49 +329,11 @@ function Rectangle(){
 
             var rectRef = db.ref('/sample/rect/' + id);
             rectRef.set(pars);
-            // console.log(rectEm);
         }
 
         isDown = false;
         isDrag = true;
     });
-
-
-    function clickFunc(){
-        console.log('click');
-
-        var rectEm = d3.select(this);
-
-        console.log(rectEm.attr('id'));
-
-
-        d3.event.stopPropagation();
-    }
-
-    function dragstarted() {
-        var e = d3.event;
-        var rectEm = d3.select(this);
-        var rect_x = parseInt(rectEm.attr('x'));
-        var rect_y = parseInt(rectEm.attr('y'));
-        var ox = e.x - rect_x;
-        var oy = e.y - rect_y;
-        m1 = {x: ox, y: oy};
-        m2 = e;
-        // d3.select(this).raise().classed("active", true);
-    }
-    
-    function dragged() {
-        var e = d3.event;
-        d3.select(this).attr("x", e.x - m1.x).attr("y", e.y - m1.y);
-    }
-    
-    function dragended() {
-        var e = d3.event;
-        if(e.x - m2.x !== 0 || e.y - m2.y !== 0) {
-            console.log('move 완료!!');
-        }
-        // d3.select(this).classed("active", false);
-    }
 
     function updateRect() {
         rect = d3.select(self.rectangleElement._groups[0][0]);
@@ -378,6 +374,166 @@ function Rectangle(){
 
 
 }
+
+
+// rectangle Event
+var rectEv = {
+    m1:{}, m2:{},
+    dragstarted: function() {
+        var e = d3.event;
+        var rectEm = d3.select(this);
+        var rect_x = parseInt(rectEm.attr('x'));
+        var rect_y = parseInt(rectEm.attr('y'));
+        var ox = e.x - rect_x;
+        var oy = e.y - rect_y;
+        this.m1 = {x: ox, y: oy};
+        this.m2 = e;
+        // d3.select(this).raise().classed("active", true);
+    },
+    dragged: function() {
+        var e = d3.event;
+        d3.select(this).attr("x", e.x - this.m1.x).attr("y", e.y - this.m1.y);
+    },
+    dragended: function() {
+        var e = d3.event;
+        if(e.x - this.m2.x !== 0 || e.y - this.m2.y !== 0) {
+            console.log('move 완료!!');
+
+            var rectEm = d3.select(this);
+
+            var pars = {
+                x: rectEm.attr('x'),
+                y: rectEm.attr('y'),
+                width: rectEm.attr('width'),
+                height: rectEm.attr('height')
+            };
+
+            var rectRef = db.ref('/sample/rect/' + rectEm.attr('id'));
+            rectRef.set(pars);
+        }
+        // d3.select(this).classed("active", false);
+    },
+    clickFunc: function() {
+        var rectEm = d3.select(this);
+        console.log(rectEm.attr('id'));
+        d3.event.stopPropagation();
+    }
+};
+
+
+function objDraw(jo){
+    svg.append("image")
+            .attr('x', jo.x - 15)
+            .attr('y', jo.y - 32)
+            .attr('width', 30)
+            .attr('height', 32)
+            .attr("xlink:href", "./image/marker.png");
+
+        svg.append('text')
+            .attr('x', jo.x - 5)
+            .attr('y', jo.y- 15)
+            .text(jo.num);
+}
+
+
+d3.select('#objCreate').on('click', function(){ new ObjCreate(); });
+function ObjCreate() {
+    console.log('objCreate!!!');
+
+    svg.on('mousedown', function() {
+        var e = d3.mouse(this);
+
+        
+        console.log('mouse down!!!');
+
+        // svg.append('text')
+        //     .attr('x', e[0])
+        //     .attr('y', e[1])
+        //     .text('abcd');
+
+        // svg.append('circle')
+        //     .attr('cx', e[0])
+        //     .attr('cy', e[1])
+        //     .attr('r', 5);
+
+
+
+        // svg.append("defs")
+        //     .append("pattern")
+        //     .attr("id", "bg")
+        //     .append("image")
+        //     .attr('x', e[0])
+        //     .attr('y', e[1])
+        //     .attr('width', 30)
+        //     .attr('height', 60)
+        //     .attr("xlink:href", "./image/marker.png");
+
+
+        // svg.append("image")
+        //     .attr('x', e[0] - 15)
+        //     .attr('y', e[1] - 32)
+        //     .attr('width', 30)
+        //     .attr('height', 32)
+        //     .attr("xlink:href", "./image/marker.png");
+
+        // svg.append('text')
+        //     .attr('x', e[0] - 5)
+        //     .attr('y', e[1] - 15)
+        //     .text('1');
+
+        var date = new Date();
+        var components = [
+            date.getYear(),
+            date.getMonth(),
+            date.getDate(),
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds(),
+            date.getMilliseconds()
+        ];
+        var id = components.join("");
+
+        var pars = {
+            x: e[0],
+            y: e[1],
+            num: objSize + 1
+        };
+
+
+        var rectRef = db.ref('/sample/obj/' + id);
+
+        rectRef.set(pars);
+
+
+        // svg.append("rect")
+        //     .attr('x', e[0])
+        //     .attr('y', e[1])
+        //     .attr('width', 30)
+        //     .attr('height', 60)
+        //     .attr("fill", "url(#bg)");
+
+
+    })
+    .on('mousemove', function() {
+    })
+    .on('mouseup', function(){
+        console.log('mouseup!!!');
+    });
+
+}
+
+
+
+
+function actionDelete(id){
+    console.log(id);
+    var isObjCreate = true;
+
+
+
+}
+
+
 
 
 function addAction(obj){
