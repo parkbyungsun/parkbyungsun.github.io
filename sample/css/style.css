@@ -59,9 +59,9 @@ svg text{
 rect {
   fill: white;
   stroke: red;
-  stroke-width: 2px;
-  opacity: 0.5;
-  cursor: move;
+  stroke-width: 3px;
+  opacity: 0.7;
+  cursor: pointer;
 }
 
 

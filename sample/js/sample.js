@@ -75,16 +75,10 @@ $(function() {
         }
     });
 
-    
-
     var actionListEm = $('#subAction');
     var rectRef = db.ref('/sample/rect');
     rectRef.on('value', function(jo){
-        // svg.html('').append('image');
-
-        svg.selectAll('rect').remove();
-        
-
+        svg.selectAll('rect.rectangle').remove();
         
         for(var id in jo.val()){
             var obj = jo.val()[id];
@@ -100,18 +94,14 @@ $(function() {
                     .on('drag', rectEv.dragged)
                     .on('end', rectEv.dragended))
                 .on('click', rectEv.clickFunc);
-
         }
-
-        
     });
 
+    // 오브젝트 변경 on event
     var objRef = db.ref('/sample/obj');
     objRef.on('value', function(jo){
 
         svg.selectAll('g').remove();
-        // svg.selectAll('image').remove();
-        // svg.selectAll('text').remove();
 
         actionListEm.empty();
         var html = '';
@@ -120,14 +110,15 @@ $(function() {
         var data = [];
         for(var id in jo.val()){
             var obj = jo.val()[id];
-            // objDraw(obj);
-            
-            html += "<li class='list-group-item' id='L"+ id +"'>"
-                + "<a href='javascript:listSelect(\""+id+"\")'>" + id + "</a>"
-                + "<button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
+
+            html += "<li class='list-group-item' id='L"+ id +"'><div class='row'><div class='col-1' onclick='listSelect(\""+id+"\")'>"+obj.num+"</div>"
+                + "<div class='col-10'>"
+                + (obj.action_id ? obj.action_id : "<button type='button' class='btn btn-sm' data-toggle='modal' data-target='#exampleModalCenter' data-whatever='"+id+"'>New</button>")
+                + "</div>"
+                + "<div class='col-1'><button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
                 + "<span aria-hidden='true'>&times;</span>"
-                + "</button>"
-                + "</li>";
+                + "</button></div>"
+                + "</div></li>";
             data.push({x: obj.x, y: obj.y, num: obj.num, id: id});
             objSize++;
         }
@@ -159,13 +150,6 @@ $(function() {
 
     });
 
-
-
-
-    // canvas
-    // var canvas = document.getElementById('canvas');
-    // var ctx = canvas.getContext('2d');
-
     // tab event
     $('#svg').hide();
     $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
@@ -181,10 +165,6 @@ $(function() {
     });
 
 });
-
-
-
-
 
 
 // cropper
@@ -217,27 +197,6 @@ cropFunc.prototype = {
         }
     },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     upload: function(){
         
         var formData = new FormData();
@@ -262,12 +221,9 @@ cropFunc.prototype = {
                     // dispRef.push(imgData);
                     dispRef.set(imgData);
                 }
-
-
             })
             .catch(function(err){console.log(err)});
     }
-
 
     // test
     ,toImage: function(){
@@ -278,6 +234,8 @@ cropFunc.prototype = {
 };
 var crop = new cropFunc();
 // END cropFunc
+
+
 
 // crop -> svg image
 function imgSelect(em){
@@ -302,7 +260,7 @@ function test(){
 
 
 
-
+// 사각영역 그리기
 d3.select('#rectangle').on('click', function(){ new Rectangle(); });
 function Rectangle(){
     var self = this, rect, rectData = [], isDown = false, m1, m2, isDrag = false;
@@ -321,9 +279,6 @@ function Rectangle(){
 
     svg.on('mousedown', function() {
         m1 = d3.mouse(this);
-        
-        console.log(m1.x, m1.y);
-
         if (!isDown && !isDrag) {
             self.rectData = [ { x: m1[0], y: m1[1] }, { x: m1[0], y: m1[1] } ];
             self.rectangleElement = d3.select('svg').append('rect')
@@ -361,7 +316,6 @@ function Rectangle(){
             var rectRef = db.ref('/sample/rect/' + id);
             rectRef.set(pars);
         }
-
         isDown = false;
         isDrag = true;
     });
@@ -446,8 +400,6 @@ var dragEv = {
     }
 };
 
-
-
 // rectangle Event
 var rectEv = {
     m1:{}, m2:{},
@@ -472,7 +424,6 @@ var rectEv = {
             console.log('move 완료!!');
 
             var rectEm = d3.select(this);
-
             var pars = {
                 x: rectEm.attr('x'),
                 y: rectEm.attr('y'),
@@ -480,8 +431,8 @@ var rectEv = {
                 height: rectEm.attr('height')
             };
 
-            // var rectRef = db.ref('/sample/rect/' + rectEm.attr('id'));
-            // rectRef.set(pars);
+            var rectRef = db.ref('/sample/rect/' + rectEm.attr('id'));
+            rectRef.set(pars);
         }
         // d3.select(this).classed("active", false);
     },
@@ -492,216 +443,50 @@ var rectEv = {
     }
 };
 
-var objEv = {
-    m1:{}, m2:{},
-    dragstarted: function() {console.log('objstarted');
-        var e = d3.event;
-        var objEm = d3.select(this);
-        var rect_x = parseInt(objEm.attr('x'));
-        var rect_y = parseInt(objEm.attr('y'));
-        var ox = e.x - rect_x;
-        var oy = e.y - rect_y;
-        this.m1 = {x: ox, y: oy};
-        this.m2 = e;
-
-
-        // d3.select(this).raise().classed("active", true);
-
-        d3.select(this).raise().classed("active", true);
-    },
-    dragged: function(d) {console.log('objdragged : ', d);
-        var e = d3.event;
-
-        var e = d3.mouse(this);
-
-        d3.select(this).select("text")
-        .attr("x", e.x )
-        .attr("y", e.y );
-      d3.select(this).select("rect")
-        .attr("x", e.x - 0)
-        .attr("y", e.y - 14);
-        
-    },
-    dragended: function() {console.log('objdraggended');
-        var e = d3.event;
-        if(e.x - this.m2.x !== 0 || e.y - this.m2.y !== 0) {
-            console.log('move 완료!!');
-
-            var objEm = d3.select(this);
-
-            var pars = {
-                x: objEm.attr('x'),
-                y: objEm.attr('y'),
-                width: objEm.attr('width'),
-                height: objEm.attr('height')
-            };
-
-            // var rectRef = db.ref('/sample/obj/' + objEm.attr('id'));
-            // rectRef.set(pars);
-        }
-        // d3.select(this).classed("active", false);
-
-        d3.select(this).classed("active", false);
-    },
-    clickFunc: function() {
-        var objEm = d3.select(this);
-        console.log(objEm.attr('id'));
-        d3.event.stopPropagation();
-    }
-};
-
-
-
-
-
-function objDraw(jo){
-
-    var group1 = svg.append('svg:g');
-            //     .call(d3.drag()
-            //     .on('start', objEv.dragstarted)
-            //     .on('drag', objEv.dragged)
-            //     .on('end', objEv.dragended))
-            // .on('click', objEv.clickFunc);
-
-
-    // .attr('transform', "translate("+jo.x+","+jo.y+")")
-    // .attr('width', 30)
-    // .attr('height', 32)
-    // .attr('x', 30)
-    // .attr('y', 32)
-    // .call(d3.drag()
-    //     .on('start', rectEv.dragstarted)
-    //     .on('drag', rectEv.dragged)
-    //     .on('end', rectEv.dragended))
-    // .on('click', rectEv.clickFunc);
-
-
-
-    group1.append('text')
-        .attr('x', jo.x - 5)
-        .attr('y', jo.y + 3)
-        .text(jo.num);
-
-
-    // svg.append("image")
-    //         .attr('x', jo.x - 15)
-    //         .attr('y', jo.y - 32)
-    //         .attr('width', 30)
-    //         .attr('height', 32)
-    //         .attr("xlink:href", "./image/marker1.png")
-    //         .call(d3.drag()
-    //             .on('start', rectEv.dragstarted)
-    //             .on('drag', rectEv.dragged)
-    //             .on('end', rectEv.dragended))
-    //         .on('click', rectEv.clickFunc);
-
-    group1.append('rect')
-        .attr('x', jo.x - 13)
-        .attr('y', jo.y - 14)
-        .attr('rx', 6)
-        // .attr('ry', 10)
-        .attr('width', 26)
-        .attr('height', 28);
-
-
-
-
-}
-
-
+// 생성버튼 클릭시 object 생성
 d3.select('#objCreate').on('click', function(){ new ObjCreate(); });
 function ObjCreate() {
-    console.log('objCreate!!!');
-
+    var isDraw = true;
     svg.on('mousedown', function() {
-        var e = d3.mouse(this);
+        if(isDraw) {
+            var e = d3.mouse(this);
 
-        
-        console.log('mouse down!!!');
+            var date = new Date();
+            var components = [
+                date.getYear(),
+                date.getMonth(),
+                date.getDate(),
+                date.getHours(),
+                date.getMinutes(),
+                date.getSeconds(),
+                date.getMilliseconds()
+            ];
+            var id = components.join("");
 
-        // svg.append('text')
-        //     .attr('x', e[0])
-        //     .attr('y', e[1])
-        //     .text('abcd');
+            var pars = {
+                x: e[0],
+                y: e[1],
+                num: objSize + 1
+            };
 
-        // svg.append('circle')
-        //     .attr('cx', e[0])
-        //     .attr('cy', e[1])
-        //     .attr('r', 5);
-
-
-
-        // svg.append("defs")
-        //     .append("pattern")
-        //     .attr("id", "bg")
-        //     .append("image")
-        //     .attr('x', e[0])
-        //     .attr('y', e[1])
-        //     .attr('width', 30)
-        //     .attr('height', 60)
-        //     .attr("xlink:href", "./image/marker.png");
-
-
-        // svg.append("image")
-        //     .attr('x', e[0] - 15)
-        //     .attr('y', e[1] - 32)
-        //     .attr('width', 30)
-        //     .attr('height', 32)
-        //     .attr("xlink:href", "./image/marker.png");
-
-        // svg.append('text')
-        //     .attr('x', e[0] - 5)
-        //     .attr('y', e[1] - 15)
-        //     .text('1');
-
-        var date = new Date();
-        var components = [
-            date.getYear(),
-            date.getMonth(),
-            date.getDate(),
-            date.getHours(),
-            date.getMinutes(),
-            date.getSeconds(),
-            date.getMilliseconds()
-        ];
-        var id = components.join("");
-
-        var pars = {
-            x: e[0],
-            y: e[1],
-            num: objSize + 1
-        };
-
-
-        var rectRef = db.ref('/sample/obj/' + id);
-
-        rectRef.set(pars);
-
-
-        // svg.append("rect")
-        //     .attr('x', e[0])
-        //     .attr('y', e[1])
-        //     .attr('width', 30)
-        //     .attr('height', 60)
-        //     .attr("fill", "url(#bg)");
-
-
+            var rectRef = db.ref('/sample/obj/' + id);
+            rectRef.set(pars);
+        }
     })
     .on('mousemove', function() {
     })
     .on('mouseup', function(){
-        console.log('mouseup!!!');
+        isDraw = false;
     });
 
 }
 
-
-
-
+// 리스트에서 x 클릭하여 삭제
 function actionDelete(id){
     db.ref('/sample/obj/' + id).set(null);
 }
 
+// 리스트 항목 선택
 function listSelect(id){
     $('#subAction li').removeClass('active');
     $('#subAction #L' + id).addClass('active');
@@ -717,21 +502,33 @@ function listSelect(id){
 
 
 
-function addAction(obj){
+
+// modal
+$('#exampleModalCenter').on('shown.bs.modal', function (e) {
+    console.log(e);
+    var button = $(e.relatedTarget);
+    var recipient = button.data('whatever');
+
+    listSelect(recipient + '');
+
+    var modal = $(this);
+
+
+    console.log('recipient : ', recipient);
 
 
 
-}
 
-
-
-
-
-
-
-
-
-
+    /*
+    var button = $(event.relatedTarget) // Button that triggered the modal
+    var recipient = button.data('whatever') // Extract info from data-* attributes
+    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+    var modal = $(this)
+    modal.find('.modal-title').text('New message to ' + recipient)
+    modal.find('.modal-body input').val(recipient)
+    */
+});
 
 
 
@@ -762,6 +559,30 @@ imgFunc.prototype = {
     url: '',
     name: ''
 };
+
+
+var actionFunc = function(){};
+actionFunc.prototype = {
+    x: 0,
+    y: 0,
+    num: '',
+    page_id: '',
+    action_id: ''
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Add a request interceptor
 axios.interceptors.request.use(function (config) {console.log('request interceptor');
