@@ -53,10 +53,11 @@ svg image {
 svg text{
   font-weight: bold;
   font-size: 12px;
+  fill: rgb(0, 0, 0);
 }
 
 rect {
-  fill: lightblue;
+  fill: white;
   stroke: red;
   stroke-width: 2px;
   opacity: 0.5;

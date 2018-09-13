@@ -83,9 +83,9 @@ $(function() {
         // svg.html('').append('image');
 
         svg.selectAll('rect').remove();
-        actionListEm.empty();
+        
 
-        var html = '';
+        
         for(var id in jo.val()){
             var obj = jo.val()[id];
             svg.append('rect')
@@ -101,30 +101,61 @@ $(function() {
                     .on('end', rectEv.dragended))
                 .on('click', rectEv.clickFunc);
 
-
-            // actionListEm.append("<li>" + id + "</li>");
-
-            html += "<li class='list-group-item'>"
-                + id
-                + "<button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
-                + "<span aria-hidden='true'>&times;</span>"
-                + "</button>"
-                + "</li>";
         }
 
-        actionListEm.html(html);
+        
     });
 
     var objRef = db.ref('/sample/obj');
     objRef.on('value', function(jo){
-        svg.selectAll('image').remove();
-        svg.selectAll('text').remove();
+
+        svg.selectAll('g').remove();
+        // svg.selectAll('image').remove();
+        // svg.selectAll('text').remove();
+
+        actionListEm.empty();
+        var html = '';
         objSize = 0;
+
+        var data = [];
         for(var id in jo.val()){
             var obj = jo.val()[id];
-            objDraw(obj);
+            // objDraw(obj);
+            
+            html += "<li class='list-group-item' id='L"+ id +"'>"
+                + "<a href='javascript:listSelect(\""+id+"\")'>" + id + "</a>"
+                + "<button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
+                + "<span aria-hidden='true'>&times;</span>"
+                + "</button>"
+                + "</li>";
+            data.push({x: obj.x, y: obj.y, num: obj.num, id: id});
             objSize++;
         }
+        actionListEm.html(html);
+
+        var objG = svg.selectAll('g').data(data).enter().append('g');
+        objG.append('rect')
+            .attr('id', function(d){return d.id})
+            .attr('x', function(d){return d.x - 13})
+            .attr('y', function(d){return d.y - 14})
+            .attr('width', 26)
+            .attr('height', 28)
+            .attr('rx', 8);
+
+        objG.append('text')
+            .attr('x', function(d){return d.x - (d.num >= 10 ? 7 : 4)})
+            .attr('y', function(d){return d.y + 5})
+            .text(function(d){return d.num});
+
+        dragEv.init(svg.selectAll('g'));
+
+        objG.on('click', function(d){
+            d3.selectAll('rect').style('fill', 'white');
+            d3.select(this).select('rect').transition().duration(500).style('fill', 'red');
+
+            actionListEm.find('li').removeClass('active');
+            actionListEm.find('#L' + d.id).addClass('active');
+        });
 
     });
 
@@ -371,9 +402,50 @@ function Rectangle(){
         //       .attr('cx', self.rectData[0].x)
         //       .attr('cy', self.rectData[1].y);
     }
-
-
 }
+
+// obj 객체 drag 이벤트
+var dragEv = {
+    deltaX: 0,
+    deltaY: 0,
+    init: function(d3Obj) {
+        var dragHandler = d3.drag()
+        // .on("start", function () {
+        //     var current = d3.select(this).selectAll('rect, text');
+        //     deltaX = current.attr("x") - d3.event.x;
+        //     deltaY = current.attr("y") - d3.event.y;
+        // })
+        // .on("drag", function (d) {console.log(d);
+        //     d3.select(this).selectAll('rect, text')
+        //         .attr("x", d3.event.x + deltaX)
+        //         .attr("y", d3.event.y + deltaY);
+        // });
+        .on('start', function(d){
+            this.deltaX = d.x;
+            this.deltaY = d.y;
+        })
+        .on("drag", function (d) {
+            d3.select(this).selectAll('text')
+                .attr("x", (d.x = d3.event.x) - (d.num >= 10 ? 7 : 4))
+                .attr("y", (d.y = d3.event.y) + 5);
+            d3.select(this).selectAll('rect')
+                .attr("x", (d.x = d3.event.x) - 13)
+                .attr("y", (d.y = d3.event.y) - 14);
+        })
+        .on('end', function(d){
+
+            if(d.x - this.deltaX !== 0 || d.y - this.deltaY !== 0) {
+                
+                var pars = {x: d.x, y: d.y, num: d.num};
+                var rectRef = db.ref('/sample/obj/' + d.id);
+                rectRef.set(pars);
+                console.log('변경OK');
+            }
+        });
+        dragHandler(d3Obj);
+    }
+};
+
 
 
 // rectangle Event
@@ -408,8 +480,8 @@ var rectEv = {
                 height: rectEm.attr('height')
             };
 
-            var rectRef = db.ref('/sample/rect/' + rectEm.attr('id'));
-            rectRef.set(pars);
+            // var rectRef = db.ref('/sample/rect/' + rectEm.attr('id'));
+            // rectRef.set(pars);
         }
         // d3.select(this).classed("active", false);
     },
@@ -420,19 +492,120 @@ var rectEv = {
     }
 };
 
+var objEv = {
+    m1:{}, m2:{},
+    dragstarted: function() {console.log('objstarted');
+        var e = d3.event;
+        var objEm = d3.select(this);
+        var rect_x = parseInt(objEm.attr('x'));
+        var rect_y = parseInt(objEm.attr('y'));
+        var ox = e.x - rect_x;
+        var oy = e.y - rect_y;
+        this.m1 = {x: ox, y: oy};
+        this.m2 = e;
+
+
+        // d3.select(this).raise().classed("active", true);
+
+        d3.select(this).raise().classed("active", true);
+    },
+    dragged: function(d) {console.log('objdragged : ', d);
+        var e = d3.event;
+
+        var e = d3.mouse(this);
+
+        d3.select(this).select("text")
+        .attr("x", e.x )
+        .attr("y", e.y );
+      d3.select(this).select("rect")
+        .attr("x", e.x - 0)
+        .attr("y", e.y - 14);
+        
+    },
+    dragended: function() {console.log('objdraggended');
+        var e = d3.event;
+        if(e.x - this.m2.x !== 0 || e.y - this.m2.y !== 0) {
+            console.log('move 완료!!');
+
+            var objEm = d3.select(this);
+
+            var pars = {
+                x: objEm.attr('x'),
+                y: objEm.attr('y'),
+                width: objEm.attr('width'),
+                height: objEm.attr('height')
+            };
+
+            // var rectRef = db.ref('/sample/obj/' + objEm.attr('id'));
+            // rectRef.set(pars);
+        }
+        // d3.select(this).classed("active", false);
+
+        d3.select(this).classed("active", false);
+    },
+    clickFunc: function() {
+        var objEm = d3.select(this);
+        console.log(objEm.attr('id'));
+        d3.event.stopPropagation();
+    }
+};
+
+
+
+
 
 function objDraw(jo){
-    svg.append("image")
-            .attr('x', jo.x - 15)
-            .attr('y', jo.y - 32)
-            .attr('width', 30)
-            .attr('height', 32)
-            .attr("xlink:href", "./image/marker.png");
 
-        svg.append('text')
-            .attr('x', jo.x - 5)
-            .attr('y', jo.y- 15)
-            .text(jo.num);
+    var group1 = svg.append('svg:g');
+            //     .call(d3.drag()
+            //     .on('start', objEv.dragstarted)
+            //     .on('drag', objEv.dragged)
+            //     .on('end', objEv.dragended))
+            // .on('click', objEv.clickFunc);
+
+
+    // .attr('transform', "translate("+jo.x+","+jo.y+")")
+    // .attr('width', 30)
+    // .attr('height', 32)
+    // .attr('x', 30)
+    // .attr('y', 32)
+    // .call(d3.drag()
+    //     .on('start', rectEv.dragstarted)
+    //     .on('drag', rectEv.dragged)
+    //     .on('end', rectEv.dragended))
+    // .on('click', rectEv.clickFunc);
+
+
+
+    group1.append('text')
+        .attr('x', jo.x - 5)
+        .attr('y', jo.y + 3)
+        .text(jo.num);
+
+
+    // svg.append("image")
+    //         .attr('x', jo.x - 15)
+    //         .attr('y', jo.y - 32)
+    //         .attr('width', 30)
+    //         .attr('height', 32)
+    //         .attr("xlink:href", "./image/marker1.png")
+    //         .call(d3.drag()
+    //             .on('start', rectEv.dragstarted)
+    //             .on('drag', rectEv.dragged)
+    //             .on('end', rectEv.dragended))
+    //         .on('click', rectEv.clickFunc);
+
+    group1.append('rect')
+        .attr('x', jo.x - 13)
+        .attr('y', jo.y - 14)
+        .attr('rx', 6)
+        // .attr('ry', 10)
+        .attr('width', 26)
+        .attr('height', 28);
+
+
+
+
 }
 
 
@@ -526,11 +699,19 @@ function ObjCreate() {
 
 
 function actionDelete(id){
-    console.log(id);
-    var isObjCreate = true;
+    db.ref('/sample/obj/' + id).set(null);
+}
 
+function listSelect(id){
+    $('#subAction li').removeClass('active');
+    $('#subAction #L' + id).addClass('active');
 
-
+    svg.selectAll('rect').style('fill', 'white').each(function(d){
+        var rectId = d3.select(this).attr('id');
+        if(id === rectId) {
+            d3.select(this).transition().duration(200).style('fill', 'red');
+        }
+    });
 }
 
 
