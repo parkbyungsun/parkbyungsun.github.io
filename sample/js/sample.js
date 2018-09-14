@@ -56,18 +56,26 @@ $(function() {
 
     // firebase 에서 기본 정보 가져온다
     var dispRef = db.ref('/sample/disp');
-
     dispRef.on('value', function(jo){
         // console.log(jo.val());
 
+        var mainImagesEm = $('#mainImages');
+        mainImagesEm.empty();
         var src = '';
-        // for(var dt in jo.val()){
-        //     var obj = jo.val()[dt];
-        //     // console.log(dt);
-        //     // console.log('data : ', obj);
 
-        //     src = obj.url;
-        // }
+        var html = '';
+        for(var dt in jo.val()){
+            var obj = jo.val()[dt];
+
+
+            // console.log(dt);
+            // console.log('data : ', obj);
+
+            src = obj.url;
+
+            html += "<img src='" + obj.url + "'>";
+            
+        }
 
         var obj = jo.val();
         if(obj.url){
@@ -108,19 +116,40 @@ $(function() {
         objSize = 0;
 
         var data = [];
+
+
+        var _listEm = document.querySelector('#accordianId');
+        _listEm.innerHTML = '';
+
+        var _actionTempEm = document.querySelector('#actionTemp');
+
+
         for(var id in jo.val()){
             var obj = jo.val()[id];
 
             html += "<li class='list-group-item' id='L"+ id +"'><div class='row'><div class='col-1' onclick='listSelect(\""+id+"\")'>"+obj.num+"</div>"
                 + "<div class='col-10'>"
-                + (obj.action_id ? obj.action_id : "<button type='button' class='btn btn-sm' data-toggle='modal' data-target='#exampleModalCenter' data-whatever='"+id+"'>New</button>")
+                + (obj.action.id || '') +"<button type='button' class='btn btn-sm' data-toggle='modal' data-target='#actionFormModal' data-whatever='"+id+"' data-actionid='"+ (obj.action.id || '')+"'>edit</button>"
                 + "</div>"
                 + "<div class='col-1'><button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
                 + "<span aria-hidden='true'>&times;</span>"
                 + "</button></div>"
                 + "</div></li>";
+
             data.push({x: obj.x, y: obj.y, num: obj.num, id: id});
             objSize++;
+
+            // var tabEm = _actionTempEm.content.querySelector('[role="tab"] [data-toggle="collapse"]');
+            // tabEm.textContent = id;
+            // tabEm.setAttribute('href', '#l' + id);
+
+            // var contentEm = _actionTempEm.content.querySelector('[role="tabpanel"]');
+            // contentEm.setAttribute('id', 'l' + id);
+
+            // var clone = document.importNode(_actionTempEm.content, true);
+            // _listEm.appendChild(clone);
+
+
         }
         actionListEm.html(html);
 
@@ -209,20 +238,49 @@ cropFunc.prototype = {
         formData.append("upload_preset", this._PRESETS);
         // formData.append('api_key', '256533272476562');
 
-        axios.post(this._URL, formData, {
-            header: {'X-Requested-With': 'XMLHttpRequest'}
-        })
-            .then(function(res){
-                if(res){
-                    var imgData = new imgFunc();
-                    imgData.url = res.data.url;
-                    imgData.name = res.data.public_id;
-                    var dispRef = db.ref('/sample/disp');
-                    // dispRef.push(imgData);
-                    dispRef.set(imgData);
-                }
-            })
-            .catch(function(err){console.log(err)});
+        var id = getId();
+        var imageRef = _st.child('images/' +id +'.png');
+
+
+        imageRef.put(imgFile).then(function(snapshot){
+            console.log('snapshot : ', snapshot);
+
+            console.log('snapshot.ref().toString() : ', snapshot.ref.toString());
+
+
+
+            imageRef.getDownloadURL().then(function(url){
+                console.log('download url : ', url);
+
+                var imgData = new imgFunc();
+                imgData.url = url;
+                imgData.name = id;
+                var dispRef = db.ref('/sample/disp/' + id);
+                // dispRef.push(imgData);
+                dispRef.set(imgData);
+            });
+        });
+
+        // axios.post(this._URL, formData, {
+        //     header: {'X-Requested-With': 'XMLHttpRequest'}
+        // })
+        //     .then(function(res){
+        //         if(res){
+        //             var imgData = new imgFunc();
+        //             imgData.url = res.data.url;
+        //             imgData.name = res.data.public_id;
+        //             var dispRef = db.ref('/sample/disp/' + res.data.public_id);
+        //             // dispRef.push(imgData);
+        //             dispRef.set(imgData);
+        //         }
+        //     })
+        //     .catch(function(err){console.log(err)});
+
+
+
+    },
+    remove: function() {
+        cloudinary.v2.uploader.destroy('sdmisiryt9woc8nxfhwn', function(error, result){console.log(result, error)});
     }
 
     // test
@@ -265,17 +323,7 @@ d3.select('#rectangle').on('click', function(){ new Rectangle(); });
 function Rectangle(){
     var self = this, rect, rectData = [], isDown = false, m1, m2, isDrag = false;
     
-    var date = new Date();
-    var components = [
-        date.getYear(),
-        date.getMonth(),
-        date.getDate(),
-        date.getHours(),
-        date.getMinutes(),
-        date.getSeconds(),
-        date.getMilliseconds()
-    ];
-    var id = components.join("");
+    var id = getId();
 
     svg.on('mousedown', function() {
         m1 = d3.mouse(this);
@@ -392,7 +440,11 @@ var dragEv = {
                 
                 var pars = {x: d.x, y: d.y, num: d.num};
                 var rectRef = db.ref('/sample/obj/' + d.id);
-                rectRef.set(pars);
+                // rectRef.set(pars);
+                rectRef.update(pars);
+
+                // var actionRef = db.ref('/sample/obj/' + d.id + '/action');
+                // actionRef.set({id: 'id', os: 'os_name'});
                 console.log('변경OK');
             }
         });
@@ -451,26 +503,17 @@ function ObjCreate() {
         if(isDraw) {
             var e = d3.mouse(this);
 
-            var date = new Date();
-            var components = [
-                date.getYear(),
-                date.getMonth(),
-                date.getDate(),
-                date.getHours(),
-                date.getMinutes(),
-                date.getSeconds(),
-                date.getMilliseconds()
-            ];
-            var id = components.join("");
+            var id = getId();
 
             var pars = {
                 x: e[0],
                 y: e[1],
-                num: objSize + 1
+                num: objSize + 1,
+                action: {id: ''}
             };
 
-            var rectRef = db.ref('/sample/obj/' + id);
-            rectRef.set(pars);
+            var objRef = db.ref('/sample/obj/' + id);
+            objRef.set(pars);
         }
     })
     .on('mousemove', function() {
@@ -504,32 +547,48 @@ function listSelect(id){
 
 
 // modal
-$('#exampleModalCenter').on('shown.bs.modal', function (e) {
-    console.log(e);
+$('#actionFormModal').on('shown.bs.modal', function (e) {
     var button = $(e.relatedTarget);
     var recipient = button.data('whatever');
-
+    var actionId = button.data('actionid');
     listSelect(recipient + '');
 
     var modal = $(this);
+    modal.find("#modalTitle").text(recipient);
 
+    modal.find('.modal-footer .btn-primary').off().on('click', {id: recipient}, function(e) {
+        var id = e.data.id;
+        actionIdSave(id);
+        modal.modal('hide');
+    });
 
-    console.log('recipient : ', recipient);
+    modal.find('#actionIdInput').val(actionId).focus().off().on('keypress', {id: recipient}, function(e) {
+        var id = e.data.id;
 
+        if(e.which == 13) {
+            actionIdSave(id);
+            modal.modal('hide');
+        }
 
-
-
-    /*
-    var button = $(event.relatedTarget) // Button that triggered the modal
-    var recipient = button.data('whatever') // Extract info from data-* attributes
-    // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-    // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-    var modal = $(this)
-    modal.find('.modal-title').text('New message to ' + recipient)
-    modal.find('.modal-body input').val(recipient)
-    */
+    });
 });
 
+function actionIdSave(id){
+    var actionId = $("#actionIdInput").val();
+
+    if(actionId) {
+        var pars = {
+            id: actionId
+        };
+        var objRef = db.ref('/sample/obj/' + id + '/action');
+        objRef.update(pars);
+
+        $('#actionFormModal').modal('hide');
+    }else{
+        console.log('auction id error');
+    }
+
+}
 
 
 
@@ -538,6 +597,22 @@ $('#exampleModalCenter').on('shown.bs.modal', function (e) {
 
 
 
+
+// unique id
+function getId(){
+    var date = new Date();
+        var components = [
+            date.getYear(),
+            date.getMonth(),
+            date.getDate(),
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds(),
+            date.getMilliseconds()
+        ];
+
+        return components.join("");
+}
 
 
 

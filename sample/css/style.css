@@ -54,6 +54,7 @@ svg text{
   font-weight: bold;
   font-size: 12px;
   fill: rgb(0, 0, 0);
+  cursor: pointer;
 }
 
 rect {
@@ -65,6 +66,9 @@ rect {
 }
 
 
+.card-header.active{
+  background-color: rgb(143, 197, 221);
+}
 
 
 #container svg, #container image , #container canvas{
