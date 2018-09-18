@@ -47,7 +47,11 @@ svg {
 }
 
 svg image {
-  /* width: 100%; */
+  width: 100%;
+}
+
+#mainImages img {
+  width: 100%;
 }
 
 svg text{

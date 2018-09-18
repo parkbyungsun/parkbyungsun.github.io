@@ -8,6 +8,16 @@ var aList = [];
 
 var svg;
 var objSize = 0;
+
+// 이미지 전역 정보                          
+var _dispObj;
+
+var _selImageId;
+var _selSubImageId;
+
+var _objEv;
+
+
 $(function() {
     $(document).on('change', '.btn-file :file', function() {
         var input = $(this),
@@ -57,34 +67,26 @@ $(function() {
     // firebase 에서 기본 정보 가져온다
     var dispRef = db.ref('/sample/disp');
     dispRef.on('value', function(jo){
-        // console.log(jo.val());
-
         var mainImagesEm = $('#mainImages');
         mainImagesEm.empty();
         var src = '';
 
         var html = '';
+
+        _dispObj = jo.val();
         for(var dt in jo.val()){
             var obj = jo.val()[dt];
-
-
-            // console.log(dt);
-            // console.log('data : ', obj);
-
             src = obj.url;
 
-            html += "<img src='" + obj.url + "'>";
-            
+            html += "<li class='list-group-item'><img onclick='crop.select(\""+ dt +"\")' src='" + obj.url + "'></li>";
         }
 
-        var obj = jo.val();
-        if(obj.url){
-            $('#img-upload').attr('src', obj.url);
-        }
+        $('#mainImages').html(html);
     });
 
     var actionListEm = $('#subAction');
     var rectRef = db.ref('/sample/rect');
+
     rectRef.on('value', function(jo){
         svg.selectAll('rect.rectangle').remove();
         
@@ -105,78 +107,22 @@ $(function() {
         }
     });
 
-    // 오브젝트 변경 on event
+
     var objRef = db.ref('/sample/obj');
-    objRef.on('value', function(jo){
+    objRef.once('value', function(jo){
+        console.log(jo.val());
 
-        svg.selectAll('g').remove();
+        var html = "";
+        for(var imgId in jo.val()){
+            var imgObj = jo.val()[imgId];
 
-        actionListEm.empty();
-        var html = '';
-        objSize = 0;
-
-        var data = [];
-
-
-        var _listEm = document.querySelector('#accordianId');
-        _listEm.innerHTML = '';
-
-        var _actionTempEm = document.querySelector('#actionTemp');
-
-
-        for(var id in jo.val()){
-            var obj = jo.val()[id];
-
-            html += "<li class='list-group-item' id='L"+ id +"'><div class='row'><div class='col-1' onclick='listSelect(\""+id+"\")'>"+obj.num+"</div>"
-                + "<div class='col-10'>"
-                + (obj.action.id || '') +"<button type='button' class='btn btn-sm' data-toggle='modal' data-target='#actionFormModal' data-whatever='"+id+"' data-actionid='"+ (obj.action.id || '')+"'>edit</button>"
-                + "</div>"
-                + "<div class='col-1'><button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
-                + "<span aria-hidden='true'>&times;</span>"
-                + "</button></div>"
-                + "</div></li>";
-
-            data.push({x: obj.x, y: obj.y, num: obj.num, id: id});
-            objSize++;
-
-            // var tabEm = _actionTempEm.content.querySelector('[role="tab"] [data-toggle="collapse"]');
-            // tabEm.textContent = id;
-            // tabEm.setAttribute('href', '#l' + id);
-
-            // var contentEm = _actionTempEm.content.querySelector('[role="tabpanel"]');
-            // contentEm.setAttribute('id', 'l' + id);
-
-            // var clone = document.importNode(_actionTempEm.content, true);
-            // _listEm.appendChild(clone);
-
-
+            for(var objId in imgObj){
+                var objObj = imgObj[objId];
+                html += "<li class='list-group-item'><a href='javascript:actionSelect(\""+imgId+"\")'>"+ objObj.action.id +"</a></li>";
+            }
         }
-        actionListEm.html(html);
 
-        var objG = svg.selectAll('g').data(data).enter().append('g');
-        objG.append('rect')
-            .attr('id', function(d){return d.id})
-            .attr('x', function(d){return d.x - 13})
-            .attr('y', function(d){return d.y - 14})
-            .attr('width', 26)
-            .attr('height', 28)
-            .attr('rx', 8);
-
-        objG.append('text')
-            .attr('x', function(d){return d.x - (d.num >= 10 ? 7 : 4)})
-            .attr('y', function(d){return d.y + 5})
-            .text(function(d){return d.num});
-
-        dragEv.init(svg.selectAll('g'));
-
-        objG.on('click', function(d){
-            d3.selectAll('rect').style('fill', 'white');
-            d3.select(this).select('rect').transition().duration(500).style('fill', 'red');
-
-            actionListEm.find('li').removeClass('active');
-            actionListEm.find('#L' + d.id).addClass('active');
-        });
-
+        $('#actionList').html(html);
     });
 
     // tab event
@@ -216,18 +162,45 @@ cropFunc.prototype = {
             this.cropper = new Cropper(img, opt);
         }
     },
+    destroy: function(){
+        this.cropper.destroy();
+    },
     clear: function(){
         this.cropper.clear();
     },
     getCrop: function(){
+        var _this = this;
         if(this.cropper){
             this.dataUrl = this.cropper.getCroppedCanvas().toDataURL('image/jpeg');
-            $('#subImages').append('<li class="list-group-item"><img src="' + this.dataUrl + '" onclick="imgSelect(this)"></li>');
+            
+            var formData = new FormData();
+
+            formData.append('file', this.dataUrl);
+            formData.append("upload_preset", this._PRESETS);
+
+            axios.post(this._URL, formData, {
+                header: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+                .then(function(res){
+                    console.log('res : ', res);
+                    if(res && _selImageId){
+
+                        var imgData = new imgFunc();
+                        imgData.url = res.data.url;
+                        imgData.name = res.data.public_id;
+                        var dispRef = db.ref('/sample/disp/' + _selImageId + '/crop/' + res.data.public_id);
+                        // dispRef.push(imgData);
+                        dispRef.set(imgData);
+
+                        _this.getSubImages();
+                    }
+                })
+                .catch(function(err){console.log(err)});
         }
     },
 
     upload: function(){
-        
+        var _this = this;
         var formData = new FormData();
         // var imgFile = document.querySelector('#img-upload');
 
@@ -239,48 +212,72 @@ cropFunc.prototype = {
         // formData.append('api_key', '256533272476562');
 
         var id = getId();
-        var imageRef = _st.child('images/' +id +'.png');
 
 
-        imageRef.put(imgFile).then(function(snapshot){
-            console.log('snapshot : ', snapshot);
+        // var imageRef = _st.child('images/' +id +'.png');
+        // imageRef.put(imgFile).then(function(snapshot){
+        //     imageRef.getDownloadURL().then(function(url){
+        //         // console.log('download url : ', url);
 
-            console.log('snapshot.ref().toString() : ', snapshot.ref.toString());
+        //         var imgData = new imgFunc();
+        //         imgData.url = url;
+        //         imgData.name = id;
+        //         var dispRef = db.ref('/sample/disp/' + id);
+        //         dispRef.set(imgData);
+        //     });
+        // });
 
-
-
-            imageRef.getDownloadURL().then(function(url){
-                console.log('download url : ', url);
-
-                var imgData = new imgFunc();
-                imgData.url = url;
-                imgData.name = id;
-                var dispRef = db.ref('/sample/disp/' + id);
-                // dispRef.push(imgData);
-                dispRef.set(imgData);
-            });
-        });
-
-        // axios.post(this._URL, formData, {
-        //     header: {'X-Requested-With': 'XMLHttpRequest'}
-        // })
-        //     .then(function(res){
-        //         if(res){
-        //             var imgData = new imgFunc();
-        //             imgData.url = res.data.url;
-        //             imgData.name = res.data.public_id;
-        //             var dispRef = db.ref('/sample/disp/' + res.data.public_id);
-        //             // dispRef.push(imgData);
-        //             dispRef.set(imgData);
-        //         }
-        //     })
-        //     .catch(function(err){console.log(err)});
+        axios.post(this._URL, formData, {
+            header: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+            .then(function(res){
+                if(res){
+                    _selImageId = res.data.public_id;
+                    var imgData = new imgFunc();
+                    imgData.url = res.data.url;
+                    imgData.name = res.data.public_id;
+                    var dispRef = db.ref('/sample/disp/' + res.data.public_id);
+                    // dispRef.push(imgData);
+                    dispRef.set(imgData);
+                }
+            })
+            .catch(function(err){console.log(err)});
 
 
 
     },
+    // main image select
+    select: function(id){
+        if(_dispObj) {
+            var obj = _dispObj[id];
+            _selImageId = id;
+            $('#img-upload').attr('src', obj.url);
+
+            this.getSubImages();
+        }
+    },
     remove: function() {
-        cloudinary.v2.uploader.destroy('sdmisiryt9woc8nxfhwn', function(error, result){console.log(result, error)});
+        cloudinary.v2.uploader.destroy('gan5jjllouvme3acsnoc', function(error, result){console.log(result, error)});
+    },
+    getSubImages: function() {
+        var dispRef = db.ref('/sample/disp/' + _selImageId + '/crop/');
+
+        dispRef.once('value', function(jo){
+            $('#subImages').empty();
+
+            var html = "";
+            for(var id in jo.val()) {
+                var obj = jo.val()[id];
+
+                console.log('obj : ', obj);
+
+                console.log(obj.url);
+                html += '<li class="list-group-item"><img src="' + obj.url + '" onclick="imgSelect(this, \''+id+'\')"></li>';
+                // $('#subImages').append('<li class="list-group-item"><img src="' + obj.url + '" onclick="imgSelect(this)"></li>');
+            }
+
+            $('#subImages').html(html);
+        });
     }
 
     // test
@@ -296,26 +293,112 @@ var crop = new cropFunc();
 
 
 // crop -> svg image
-function imgSelect(em){
-    svg.select('image').attr('href', em.src);
+function imgSelect(em, id){
+    // svg.select('image').attr('href', em.src);
+
+    // console.log(_dispObj);
+
+    for(var i in _dispObj){
+        var obj = _dispObj[i]["crop"];
+        // console.log(_dispObj[i]);
+        for(var j in obj) {
+            var cropObj = obj[j];
+            
+            if(id == cropObj.name) {
+                svg.select('image').attr('href', cropObj.url);
+            }
+        }
+    }
+
+
+
+
+    _selSubImageId = id;
+
+    var actionListEm = $('#subAction');
+    svg.selectAll('g').remove();
+    actionListEm.empty();
+    if(_objEv) {
+        _objEv.off();
+    }
+    
+
+    _objEv = db.ref('/sample/obj/' + _selSubImageId);
+    _objEv.on('value', function(jo){
+
+        if(jo.val()){
+
+            var html = '';
+            objSize = 0;
+
+            var data = [];
+
+
+            var _listEm = document.querySelector('#accordianId');
+            _listEm.innerHTML = '';
+
+            var _actionTempEm = document.querySelector('#actionTemp');
+
+
+            for(var id in jo.val()){
+                var obj = jo.val()[id];
+
+                html += "<li class='list-group-item' id='L"+ id +"'><div class='row'><div class='col-1' onclick='listSelect(\""+id+"\")'>"+obj.num+"</div>"
+                    + "<div class='col-10'>"
+                    + (obj.action.id || '') +"<button type='button' class='btn btn-sm' data-toggle='modal' data-target='#actionFormModal' data-whatever='"+id+"' data-actionid='"+ (obj.action.id || '')+"'>edit</button>"
+                    + "</div>"
+                    + "<div class='col-1'><button type='button' class='close' aria-label='Close' onclick='actionDelete(\""+ id +"\")'>"
+                    + "<span aria-hidden='true'>&times;</span>"
+                    + "</button></div>"
+                    + "</div></li>";
+
+                data.push({x: obj.x, y: obj.y, num: obj.num, id: id});
+                objSize++;
+
+                // var tabEm = _actionTempEm.content.querySelector('[role="tab"] [data-toggle="collapse"]');
+                // tabEm.textContent = id;
+                // tabEm.setAttribute('href', '#l' + id);
+
+                // var contentEm = _actionTempEm.content.querySelector('[role="tabpanel"]');
+                // contentEm.setAttribute('id', 'l' + id);
+
+                // var clone = document.importNode(_actionTempEm.content, true);
+                // _listEm.appendChild(clone);
+
+
+            }
+            actionListEm.html(html);
+
+            var objG = svg.selectAll('g').data(data).enter().append('g');
+            objG.append('rect')
+                .attr('id', function(d){return d.id})
+                .attr('x', function(d){return d.x - 13})
+                .attr('y', function(d){return d.y - 14})
+                .attr('width', 26)
+                .attr('height', 28)
+                .attr('rx', 8);
+
+            objG.append('text')
+                .attr('x', function(d){return d.x - (d.num >= 10 ? 7 : 4)})
+                .attr('y', function(d){return d.y + 5})
+                .text(function(d){return d.num});
+
+            dragEv.init(svg.selectAll('g'));
+
+            objG.on('click', function(d){
+                d3.selectAll('rect').style('fill', 'white');
+                d3.select(this).select('rect').transition().duration(500).style('fill', 'red');
+
+                actionListEm.find('li').removeClass('active');
+                actionListEm.find('#L' + d.id).addClass('active');
+            });
+
+
+
+        }
+    });
+
 }
-
-
-function test(){
-
-
-    console.log('test');
-}
-
-
-
-
-
-
-
-
-
-
 
 
 // 사각영역 그리기
@@ -439,7 +522,7 @@ var dragEv = {
             if(d.x - this.deltaX !== 0 || d.y - this.deltaY !== 0) {
                 
                 var pars = {x: d.x, y: d.y, num: d.num};
-                var rectRef = db.ref('/sample/obj/' + d.id);
+                var rectRef = db.ref('/sample/obj/' + _selSubImageId + '/' + d.id);
                 // rectRef.set(pars);
                 rectRef.update(pars);
 
@@ -500,7 +583,7 @@ d3.select('#objCreate').on('click', function(){ new ObjCreate(); });
 function ObjCreate() {
     var isDraw = true;
     svg.on('mousedown', function() {
-        if(isDraw) {
+        if(isDraw && _selSubImageId) {
             var e = d3.mouse(this);
 
             var id = getId();
@@ -512,8 +595,10 @@ function ObjCreate() {
                 action: {id: ''}
             };
 
-            var objRef = db.ref('/sample/obj/' + id);
+            var objRef = db.ref('/sample/obj/'+_selSubImageId+'/' + id);
             objRef.set(pars);
+        }else{
+            console.log('x');
         }
     })
     .on('mousemove', function() {
@@ -526,7 +611,7 @@ function ObjCreate() {
 
 // 리스트에서 x 클릭하여 삭제
 function actionDelete(id){
-    db.ref('/sample/obj/' + id).set(null);
+    db.ref('/sample/obj/'+_selSubImageId+'/' + id).set(null);
 }
 
 // 리스트 항목 선택
@@ -580,7 +665,7 @@ function actionIdSave(id){
         var pars = {
             id: actionId
         };
-        var objRef = db.ref('/sample/obj/' + id + '/action');
+        var objRef = db.ref('/sample/obj/'+_selSubImageId+'/' + id + '/action');
         objRef.update(pars);
 
         $('#actionFormModal').modal('hide');
@@ -591,6 +676,9 @@ function actionIdSave(id){
 }
 
 
+function actionSelect(imgId){
+    imgSelect(1, imgId);
+}
 
 
 
