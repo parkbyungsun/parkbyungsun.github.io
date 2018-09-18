@@ -69,6 +69,10 @@ rect {
   cursor: pointer;
 }
 
+#mainImages img, #subImages img , #subAction .col-1{
+  cursor: pointer;
+}
+
 
 .card-header.active{
   background-color: rgb(143, 197, 221);

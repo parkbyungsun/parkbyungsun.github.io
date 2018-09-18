@@ -298,6 +298,10 @@ function imgSelect(em, id){
 
     // console.log(_dispObj);
 
+    
+
+
+
     for(var i in _dispObj){
         var obj = _dispObj[i]["crop"];
         // console.log(_dispObj[i]);
@@ -398,6 +402,8 @@ function imgSelect(em, id){
         }
     });
 
+
+    $('#contact-tab').trigger('click');
 }
 
 
