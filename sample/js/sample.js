@@ -17,6 +17,10 @@ var _selSubImageId;
 
 var _objEv;
 
+window.addEventListener('message', receiveMsgFromParent );
+function receiveMsgFromParent(e) {
+    console.log('부모로 부터 받은 메시지 ', e.data);
+}
 
 $(function() {
     $(document).on('change', '.btn-file :file', function() {
