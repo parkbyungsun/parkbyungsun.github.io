@@ -139,6 +139,9 @@ $(function() {
         }
     });
 
+    // referrer 체크
+    console.log('document referrer : ', document.referrer);
+
 });
 
 
@@ -181,21 +184,20 @@ cropFunc.prototype = {
             axios.post(this._URL, formData, {
                 header: {'X-Requested-With': 'XMLHttpRequest'}
             })
-                .then(function(res){
-                    console.log('res : ', res);
-                    if(res && _selImageId){
+            .then(function(res){
+                if(res && _selImageId){
 
-                        var imgData = new imgFunc();
-                        imgData.url = res.data.url;
-                        imgData.name = res.data.public_id;
-                        var dispRef = db.ref('/sample/disp/' + _selImageId + '/crop/' + res.data.public_id);
-                        // dispRef.push(imgData);
-                        dispRef.set(imgData);
+                    var imgData = new imgFunc();
+                    imgData.url = res.data.url;
+                    imgData.name = res.data.public_id;
+                    var dispRef = db.ref('/sample/disp/' + _selImageId + '/crop/' + res.data.public_id);
+                    // dispRef.push(imgData);
+                    dispRef.set(imgData);
 
-                        _this.getSubImages();
-                    }
-                })
-                .catch(function(err){console.log(err)});
+                    _this.getSubImages();
+                }
+            })
+            .catch(function(err){console.log(err)});
         }
     },
 
@@ -253,6 +255,8 @@ cropFunc.prototype = {
             _selImageId = id;
             $('#img-upload').attr('src', obj.url);
 
+
+            
             this.getSubImages();
         }
     },
