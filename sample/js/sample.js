@@ -23,7 +23,7 @@ function receiveMsgFromParent(e) {
 
     var ori = e.origin;
     
-    if(ori.search('chrome-extension')) {
+    if(ori.search('chrome-extension') !== -1) {
         var imgEm = document.getElementById('img-upload');
         imgEm.src = e.data;
     }
