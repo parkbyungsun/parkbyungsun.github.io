@@ -20,8 +20,13 @@ var _objEv;
 function receiveMsgFromParent(e) {
     console.log(e);
     console.log('부모로 부터 받은 메시지 ', e.data);
-    var imgEm = document.getElementById('img-upload');
-    imgEm.src = e.data;
+
+    var ori = e.origin;
+    
+    if(ori.search('chrome-extension')) {
+        var imgEm = document.getElementById('img-upload');
+        imgEm.src = e.data;
+    }
 }
 
 $(function() {
