@@ -142,6 +142,8 @@ $(function() {
     // referrer 체크
     console.log('document referrer : ', document.referrer);
 
+    console.log('chrome extension : ', chrome);
+
 });
 
 
