@@ -143,6 +143,9 @@ $(function() {
     console.log('document referrer : ', document.referrer);
 
     console.log('chrome extension : ', chrome);
+    console.log('locaiton.href : ', location.href);
+    console.log('location.hostname : ', location.hostname);
+    console.log('location.pathname : ', location.pathname);
 
 });
 
