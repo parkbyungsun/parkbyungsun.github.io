@@ -144,15 +144,6 @@ $(function() {
             $('#svg').show();
         }
     });
-
-    // referrer 체크
-    console.log('document referrer : ', document.referrer);
-
-    console.log('chrome extension : ', chrome);
-    console.log('locaiton.href : ', location.href);
-    console.log('location.hostname : ', location.hostname);
-    console.log('location.pathname : ', location.pathname);
-
 });
 
 
@@ -215,7 +206,7 @@ cropFunc.prototype = {
     upload: function(){
         var _this = this;
         var formData = new FormData();
-        // var imgFile = document.querySelector('#img-upload');
+        var imgFile = document.querySelector('#img-upload');
 
         console.log(imgFile);
 
