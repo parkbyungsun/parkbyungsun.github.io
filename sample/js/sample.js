@@ -218,30 +218,35 @@ cropFunc.prototype = {
 
         console.log('upload imageFile : ', imgFile);
 
+        var reader = new FileReader();
+        reader.readAsDataURL(imgFile);
+        reader.onloadend = function() {
+            var base64data = reader.result;
+            console.log('readAsDataURL base64data : ', base64data);
 
-        formData.append('file', imgFile);
-        formData.append("upload_preset", this._PRESETS);
-        // formData.append('api_key', '256533272476562');
-
-        var id = getId();
-
-
-        // var imageRef = _st.child('images/' +id +'.png');
-        // imageRef.put(imgFile).then(function(snapshot){
-        //     imageRef.getDownloadURL().then(function(url){
-        //         // console.log('download url : ', url);
-
-        //         var imgData = new imgFunc();
-        //         imgData.url = url;
-        //         imgData.name = id;
-        //         var dispRef = db.ref('/sample/disp/' + id);
-        //         dispRef.set(imgData);
-        //     });
-        // });
-
-        axios.post(this._URL, formData, {
-            header: {'X-Requested-With': 'XMLHttpRequest'}
-        })
+            formData.append('file', imgFile);
+            formData.append("upload_preset", this._PRESETS);
+            // formData.append('api_key', '256533272476562');
+    
+            var id = getId();
+    
+            // firebase 저장
+            // var imageRef = _st.child('images/' +id +'.png');
+            // imageRef.put(imgFile).then(function(snapshot){
+            //     imageRef.getDownloadURL().then(function(url){
+            //         // console.log('download url : ', url);
+    
+            //         var imgData = new imgFunc();
+            //         imgData.url = url;
+            //         imgData.name = id;
+            //         var dispRef = db.ref('/sample/disp/' + id);
+            //         dispRef.set(imgData);
+            //     });
+            // });
+    
+            axios.post(this._URL, formData, {
+                header: {'X-Requested-With': 'XMLHttpRequest'}
+            })
             .then(function(res){
                 if(res){
                     _selImageId = res.data.public_id;
@@ -254,8 +259,7 @@ cropFunc.prototype = {
                 }
             })
             .catch(function(err){console.log(err)});
-
-
+        }
 
     },
     // main image select
