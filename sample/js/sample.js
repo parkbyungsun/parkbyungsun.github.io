@@ -224,7 +224,7 @@ cropFunc.prototype = {
             var base64data = reader.result;
             console.log('readAsDataURL base64data : ', base64data);
 
-            formData.append('file', imgFile);
+            formData.append('file', base64data);
             formData.append("upload_preset", this._PRESETS);
             // formData.append('api_key', '256533272476562');
     
