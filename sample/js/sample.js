@@ -219,7 +219,7 @@ cropFunc.prototype = {
         console.log('upload imageFile : ', imgFile);
 
         var reader = new FileReader();
-        reader.readAsDataURL(imgFile);
+        reader.readAsDataURL(imgFile.src);
         reader.onloadend = function() {
             var base64data = reader.result;
             console.log('readAsDataURL base64data : ', base64data);
