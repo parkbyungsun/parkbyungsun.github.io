@@ -187,6 +187,7 @@ cropFunc.prototype = {
             
             var formData = new FormData();
 
+            console.log('getCrop dataUrl : ', this.dataUrl);
             formData.append('file', this.dataUrl);
             formData.append("upload_preset", this._PRESETS);
 
@@ -215,7 +216,7 @@ cropFunc.prototype = {
         var formData = new FormData();
         var imgFile = document.querySelector('#img-upload');
 
-        console.log(imgFile);
+        console.log('upload imageFile : ', imgFile);
 
 
         formData.append('file', imgFile);
