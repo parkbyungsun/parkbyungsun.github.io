@@ -218,6 +218,10 @@ cropFunc.prototype = {
 
         console.log('upload imageFile : ', imgFile);
 
+        var imgUrl = URL.createObjectURL(imgFile);
+
+        console.log('imgUrl : ', imgUrl);
+
         var reader = new FileReader();
         reader.readAsDataURL(imgFile.src);
         reader.onloadend = function() {
