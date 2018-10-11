@@ -213,23 +213,20 @@ cropFunc.prototype = {
 
     upload: function(){
         var _this = this;
-        var formData = new FormData();
+        
         var imgFile = document.querySelector('#img-upload');
 
         console.log('upload imageFile : ', imgFile);
+        console.log('data src : ', imgFile.src);
 
-        var imgUrl = URL.createObjectURL(imgFile);
+        blobUtil.imgSrcToDataURL(imgFile.src).then(function(blob){
 
-        console.log('imgUrl : ', imgUrl);
 
-        var reader = new FileReader();
-        reader.readAsDataURL(imgFile.src);
-        reader.onloadend = function() {
-            var base64data = reader.result;
-            console.log('readAsDataURL base64data : ', base64data);
+            console.log('blob then : ', blob);
 
-            formData.append('file', base64data);
-            formData.append("upload_preset", this._PRESETS);
+            var formData = new FormData();
+            formData.append('file', blob);
+            formData.append("upload_preset", _this._PRESETS);
             // formData.append('api_key', '256533272476562');
     
             var id = getId();
@@ -248,7 +245,7 @@ cropFunc.prototype = {
             //     });
             // });
     
-            axios.post(this._URL, formData, {
+            axios.post(_this._URL, formData, {
                 header: {'X-Requested-With': 'XMLHttpRequest'}
             })
             .then(function(res){
@@ -263,7 +260,30 @@ cropFunc.prototype = {
                 }
             })
             .catch(function(err){console.log(err)});
-        }
+
+
+        }).catch(function(err){
+            var formData = new FormData();
+            formData.append('file', imgFile.src);
+            formData.append("upload_preset", _this._PRESETS);
+            axios.post(_this._URL, formData, {
+                header: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+            .then(function(res){
+                if(res){
+                    _selImageId = res.data.public_id;
+                    var imgData = new imgFunc();
+                    imgData.url = res.data.url;
+                    imgData.name = res.data.public_id;
+                    var dispRef = db.ref('/sample/disp/' + res.data.public_id);
+                    // dispRef.push(imgData);
+                    dispRef.set(imgData);
+                }
+            })
+            .catch(function(err){console.log(err)});
+        });
+
+        
 
     },
     // main image select
