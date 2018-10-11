@@ -187,7 +187,7 @@ cropFunc.prototype = {
             
             var formData = new FormData();
 
-            console.log('getCrop dataUrl : ', this.dataUrl);
+            // console.log('getCrop dataUrl : ', this.dataUrl);
             formData.append('file', this.dataUrl);
             formData.append("upload_preset", this._PRESETS);
 
@@ -216,13 +216,13 @@ cropFunc.prototype = {
         
         var imgFile = document.querySelector('#img-upload');
 
-        console.log('upload imageFile : ', imgFile);
-        console.log('data src : ', imgFile.src);
+        // console.log('upload imageFile : ', imgFile);
+        // console.log('data src : ', imgFile.src);
 
         blobUtil.imgSrcToDataURL(imgFile.src).then(function(blob){
 
 
-            console.log('blob then : ', blob);
+            // console.log('blob then : ', blob);
 
             var formData = new FormData();
             formData.append('file', blob);

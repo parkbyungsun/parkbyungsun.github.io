@@ -1,0 +1,45 @@
+{
+    "manifest_version": 2,
+    "name": "devtools panel capture",
+    "short_name": "dtp",
+    "description": "devtools panel capture",
+    "version": "0.0.1",
+    "icons": {
+        "64": "assets/icon.png",
+        "128": "assets/icon.png"
+    },
+    "devtools_page": "devtools.html",
+
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": true
+    },
+    "browser_action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>",
+                "http://*/*",
+                "https://*/*"
+            ],
+            "css": ["css/test.css"],
+            "js": ["js/test.js", "js/jquery-3.3.1.min.js"]
+        }
+    ],
+    "permissions": [
+        "storage",
+        "activeTab",
+        "<all_urls>",
+        "identity",
+        "identity.email",
+        "tabs",
+        "pageCapture",
+        "unlimitedStorage",
+        "http://*/*",
+        "https://*/*"
+    ]
+}
